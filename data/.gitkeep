@@ -1,0 +1,3 @@
+# Keep the data folder in git
+
+This folder is used for runtime assets (images, audio). Place your ambient.ogg here.

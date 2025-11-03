@@ -2,3 +2,10 @@
 obj
 bin/Acuarium*
 .DS_Store
+
+# Ignore build artifacts and large audio files
+*.exe
+*.wav
+*.ogg
+bin/
+obj/

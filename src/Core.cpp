@@ -12,7 +12,53 @@ void Creature::normalize() {
 }
 
 void Creature::bounce() {
-    // should implement boundary controls here
+    // Prevent creatures from leaving the aquarium bounds and make them bounce off the walls.
+    // Use collision radius as a margin so sprites don't get stuck halfway off-screen.
+    if (m_width <= 0 || m_height <= 0) return; // bounds not set
+
+    float margin = m_collisionRadius;
+    float minX = margin;
+    float maxX = m_width - margin;
+    float minY = margin;
+    float maxY = m_height - margin;
+
+    bool bounced = false;
+
+    if (m_x < minX) {
+        m_x = minX;
+        m_dx = -m_dx;
+        bounced = true;
+    } else if (m_x > maxX) {
+        m_x = maxX;
+        m_dx = -m_dx;
+        bounced = true;
+    }
+
+    if (m_y < minY) {
+        m_y = minY;
+        m_dy = -m_dy;
+        bounced = true;
+    } else if (m_y > maxY) {
+        m_y = maxY;
+        m_dy = -m_dy;
+        bounced = true;
+    }
+
+    // If we bounced, normalize direction again to keep movement stable
+    if (bounced) {
+        normalize();
+    }
+
+    // If for some reason direction becomes zero, pick a small random direction
+    if (m_dx == 0.0f && m_dy == 0.0f) {
+        m_dx = 1.0f;
+        m_dy = 0.0f;
+        normalize();
+    }
+
+    // Update sprite flip state for horizontal direction
+    if (m_dx < 0) setFlipped(true);
+    else setFlipped(false);
 }
 
 
@@ -48,7 +94,14 @@ void GameEvent::print() const {
 
 // collision detection between two creatures
 bool checkCollision(std::shared_ptr<Creature> a, std::shared_ptr<Creature> b) {
-    return false; 
+    if (!a || !b) return false;
+
+    // Use circle-based collision detection based on each creature's collision radius
+    float dx = a->getX() - b->getX();
+    float dy = a->getY() - b->getY();
+    float distSq = dx * dx + dy * dy;
+    float radiusSum = a->getCollisionRadius() + b->getCollisionRadius();
+    return distSq <= (radiusSum * radiusSum);
 };
 
 

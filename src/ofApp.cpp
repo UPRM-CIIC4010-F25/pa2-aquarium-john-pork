@@ -8,6 +8,23 @@ void ofApp::setup(){
     backgroundImage.load("background.png");
     backgroundImage.resize(ofGetWindowWidth(), ofGetWindowHeight());
 
+    // load background ambient music (preload to avoid first-play hitch)
+    // Try .wav first, then .ogg as fallback
+    if (!bgMusic.load("ambient.wav")) {
+        ofLogWarning() << "Failed to load ambient.wav, trying ambient.ogg";
+        if (!bgMusic.load("ambient.ogg")) {
+            ofLogError() << "Failed to load both ambient.wav and ambient.ogg";
+        } else {
+            ofLogNotice() << "Successfully loaded ambient.ogg";
+        }
+    } else {
+        ofLogNotice() << "Successfully loaded ambient.wav";
+    }
+    bgMusic.setLoop(true);
+    bgMusic.setMultiPlay(false);
+    bgMusic.setVolume(0.6f); // reasonable volume
+    // Music will play when entering the aquarium scene
+
 
     std::shared_ptr<Aquarium> myAquarium;
     std::shared_ptr<PlayerCreature> player;
@@ -67,6 +84,8 @@ void ofApp::update(){
         auto gameScene = std::static_pointer_cast<AquariumGameScene>(gameManager->GetActiveScene());
         if(gameScene->GetLastEvent() != nullptr && gameScene->GetLastEvent()->isGameOver()){
             gameManager->Transition(GameSceneKindToString(GameSceneKind::GAME_OVER));
+            // stop ambient music when game ends
+            if (bgMusic.isPlaying()) bgMusic.stop();
             return;
         }
         
@@ -86,7 +105,8 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::exit(){
-    
+    if (bgMusic.isPlaying()) bgMusic.stop();
+    bgMusic.unload();
 }
 
 //--------------------------------------------------------------
@@ -128,6 +148,11 @@ void ofApp::keyPressed(int key){
         {
         case OF_KEY_SPACE:
             gameManager->Transition(GameSceneKindToString(GameSceneKind::AQUARIUM_GAME));
+            // start ambient music when entering aquarium scene
+            if (!bgMusic.isPlaying()) {
+                bgMusic.play();
+                ofLogNotice() << "Playing ambient music now!";
+            }
             break;
         
         default:
