@@ -22,10 +22,10 @@ To submit this assignment, create a Release with the branch that holds all the c
 Grading
 
 ## Team Info
-| Student Number | Student Name | Student Email |
-|-|-|-|
-|(STUDENT NUMBER HERE)| (STUDENT NAME HERE)| (STUDENT EMAIL HERE) |
-|(STUDENT NUMBER HERE)| (STUDENT NAME HERE)| (STUDENT EMAIL HERE) |
+
+| 802-21-6663 | KEVIN G FIGUEROA GALARZA| kevin.figueroa18@upr.edu
+
+| 802-23-3300 | Jose Armando Rivera Toledo| jose.rivera483@upr.edu
 
 ---
 

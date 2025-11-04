@@ -3,6 +3,27 @@
 #include "ofMain.h"
 #include "Aquarium.h"
 
+// Visual effects structures
+struct Bubble {
+    ofVec2f pos;
+    float size;
+    float speed;
+    float wobble;
+};
+
+struct Ripple {
+    ofVec2f pos;
+    float radius;
+    float alpha;
+    float maxRadius;
+};
+
+struct Particle {
+    ofVec2f pos;
+    ofVec2f vel;
+    float alpha;
+    float size;
+};
 
 class ofApp : public ofBaseApp{
 
@@ -41,17 +62,37 @@ class ofApp : public ofBaseApp{
 
 		AwaitFrames acuariumUpdate{5};
 
-		ofTrueTypeFont gameOverTitle;
-		GameEvent lastEvent;
+	ofTrueTypeFont gameOverTitle;
+	ofTrueTypeFont controlsFont;
+	ofTrueTypeFont controlsTitleFont;
+	GameEvent lastEvent;
 
 
-		ofImage backgroundImage;
+	ofImage backgroundImage;
 
-	    // Background ambient music for the aquarium scene
-	    ofSoundPlayer bgMusic;
+    // Background ambient music for the aquarium scene
+    ofSoundPlayer bgMusic;
 
-		std::unique_ptr<GameSceneManager> gameManager;
-		std::shared_ptr<AquariumSpriteManager> spriteManager;
-		
-
+	std::unique_ptr<GameSceneManager> gameManager;
+	std::shared_ptr<AquariumSpriteManager> spriteManager;
+	
+	// Controls overlay
+	bool showControlsOverlay = true;
+	float overlayAlpha = 220.0f;
+	
+	// Combo system
+	int comboCount = 0;
+	float comboTimer = 0.0f;
+	float comboResetTime = 2.0f; // seconds until combo resets
+	
+	// Screen shake
+	float shakeIntensity = 0.0f;
+	float shakeDuration = 0.0f;
+	ofVec2f shakeOffset;
+	
+	// Visual effects
+	std::vector<Bubble> bubbles;
+	std::vector<Ripple> ripples;
+	std::vector<Particle> particles;
+	float waterOverlayPulse = 0.0f;
 };
