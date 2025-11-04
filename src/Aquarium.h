@@ -48,6 +48,7 @@ class PlayerCreature : public Creature {
 public:
 
     PlayerCreature(float x, float y, int speed, std::shared_ptr<GameSprite> sprite);
+    ofColor currentColor = ofColor::white; 
     void move();
     void draw() const;
     void update();

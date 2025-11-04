@@ -45,14 +45,18 @@ void PlayerCreature::update() {
 void PlayerCreature::draw() const {
     
     ofLogVerbose() << "PlayerCreature at (" << m_x << ", " << m_y << ") with speed " << m_speed << std::endl;
+
     if (this->m_damage_debounce > 0) {
         ofSetColor(ofColor::red); // Flash red if in damage debounce
+    } else {
+        ofSetColor(currentColor); 
     }
+
     if (m_sprite) {
         m_sprite->draw(m_x, m_y);
     }
-    ofSetColor(ofColor::white); // Reset color
 
+    ofSetColor(ofColor::white); // Reset color
 }
 
 void PlayerCreature::changeSpeed(int speed) {

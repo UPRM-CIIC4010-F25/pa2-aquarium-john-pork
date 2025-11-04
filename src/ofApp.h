@@ -29,6 +29,15 @@ class ofApp : public ofBaseApp{
 		char moveDirection;
 		int DEFAULT_SPEED = 5;
 
+        float powerUpCharge = 100.0f;         
+        float powerUpMax = 100.0f;             
+        float powerUpDepletionRate = 50.0f;    
+        float powerUpRechargeRate = 25.0f;     
+        bool powerUpActive = false;            
+        int boostedSpeed = 12;                 
+        
+		float hue = 0.0f;
+
 
 		AwaitFrames acuariumUpdate{5};
 
@@ -42,6 +51,7 @@ class ofApp : public ofBaseApp{
 	    ofSoundPlayer bgMusic;
 
 		std::unique_ptr<GameSceneManager> gameManager;
-		std::shared_ptr<AquariumSpriteManager>spriteManager;
+		std::shared_ptr<AquariumSpriteManager> spriteManager;
 		
+
 };

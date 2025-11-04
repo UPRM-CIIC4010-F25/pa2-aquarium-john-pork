@@ -74,10 +74,10 @@ void ofApp::setup(){
 }
 
 //--------------------------------------------------------------
-void ofApp::update(){
-    
+void ofApp::update() {
+
     if(gameManager->GetActiveSceneName() == GameSceneKindToString(GameSceneKind::GAME_OVER)){
-        return; // Stop updating if game is over or exiting
+        return; //stop updating if game is over or exiting
     }
 
     if(gameManager->GetActiveSceneName() == GameSceneKindToString(GameSceneKind::AQUARIUM_GAME)){
@@ -88,19 +88,65 @@ void ofApp::update(){
             if (bgMusic.isPlaying()) bgMusic.stop();
             return;
         }
-        
     }
 
     gameManager->UpdateActiveScene();
-    
 
+    if(gameManager->GetActiveSceneName() == GameSceneKindToString(GameSceneKind::AQUARIUM_GAME)){
+        auto gameScene = std::static_pointer_cast<AquariumGameScene>(gameManager->GetActiveScene());
+        auto player = gameScene->GetPlayer();
 
+        float deltaTime = 1.0f / 60.0f; 
+
+        if(powerUpActive){
+            powerUpCharge -= powerUpDepletionRate * deltaTime;
+            if(powerUpCharge <= 0.0f){
+                powerUpCharge = 0.0f;
+                powerUpActive = false; // stops boost when empty
+                player->currentColor = ofColor::white; // reset color
+            } else {
+                // boost player speed
+                player->setSpeed(boostedSpeed);
+
+                // rainbow color effect
+                float time = ofGetElapsedTimef();
+                player->currentColor.setHsb(fmod(time * 100, 255), 255, 255); 
+            }
+        } else {
+            // powerup recharge
+            powerUpCharge += powerUpRechargeRate * deltaTime;
+            if(powerUpCharge > powerUpMax) powerUpCharge = powerUpMax;
+
+            player->setSpeed(DEFAULT_SPEED);
+            player->currentColor = ofColor::white; // reset to normal
+        }
+    }
 }
+
 
 //--------------------------------------------------------------
 void ofApp::draw(){
     backgroundImage.draw(0, 0);
     gameManager->DrawActiveScene();
+
+if(gameManager->GetActiveSceneName() == GameSceneKindToString(GameSceneKind::AQUARIUM_GAME)){
+    float barWidth = 200.0f;
+    float barHeight = 20.0f;
+    float x = ofGetWidth() / 2 - barWidth / 2;
+    float y = 20.0f;
+
+    ofSetColor(100, 100, 100);
+    ofDrawRectangle(x, y, barWidth, barHeight);
+
+    ofSetColor(50, 200, 50); //green
+    ofDrawRectangle(x, y, barWidth * (powerUpCharge / 100.0f), barHeight);
+
+    ofNoFill();
+    ofSetColor(255);
+    ofDrawRectangle(x, y, barWidth, barHeight);
+    ofFill();
+}
+
 }
 
 //--------------------------------------------------------------
@@ -111,6 +157,12 @@ void ofApp::exit(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
+  if(key == 'p'){ //activate boost
+    if(powerUpCharge > 0.0f){
+        powerUpActive = true; //start boost
+    }
+}
+
     if (lastEvent.isGameExit()) { 
         ofLogNotice() << "Game has ended. Press ESC to exit." << std::endl;
         return; // Ignore other keys after game over
@@ -167,6 +219,11 @@ void ofApp::keyPressed(int key){
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
+  
+if(key == 'p'){
+    powerUpActive = false; //stops boost when key released
+}
+
     if(gameManager->GetActiveSceneName() == GameSceneKindToString(GameSceneKind::AQUARIUM_GAME)){
         auto gameScene = std::static_pointer_cast<AquariumGameScene>(gameManager->GetActiveScene());
     if( key == OF_KEY_UP || key == OF_KEY_DOWN){
