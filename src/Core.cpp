@@ -112,6 +112,7 @@ string GameSceneKindToString(GameSceneKind t){
         case GameSceneKind::AQUARIUM_GAME: return "AQUARIUM_GAME";
         case GameSceneKind::GAME_OVER: return "GAME_OVER";
     };
+    return "UNKNOWN"; // Default case
 };
 
 std::shared_ptr<GameScene> GameSceneManager::GetScene(string name){
@@ -171,6 +172,32 @@ void GameIntroScene::Update(){
 
 void GameIntroScene::Draw(){
     this->m_banner->draw(0,0);
+    
+    // Add helpful text overlay on intro screen
+    ofTrueTypeFont font;
+    font.load("Verdana.ttf", 18, true, true);
+    
+    // Draw "Press SPACE to start" text with glow effect
+    ofSetColor(0, 0, 0, 180);
+    string startMsg = "Press SPACE to Start";
+    float msgWidth = font.stringWidth(startMsg);
+    float msgX = ofGetWidth() / 2 - msgWidth / 2;
+    float msgY = ofGetHeight() - 100;
+    
+    // Shadow/glow
+    font.drawString(startMsg, msgX + 2, msgY + 2);
+    
+    // Main text
+    ofSetColor(255, 255, 100);
+    font.drawString(startMsg, msgX, msgY);
+    
+    // Add controls hint
+    ofTrueTypeFont smallFont;
+    smallFont.load("Verdana.ttf", 14, true, true);
+    ofSetColor(200, 200, 200);
+    string controlsHint = "Press C anytime to view controls";
+    float hintWidth = smallFont.stringWidth(controlsHint);
+    smallFont.drawString(controlsHint, ofGetWidth() / 2 - hintWidth / 2, msgY + 35);
 }
 
 void GameOverScene::Update(){
