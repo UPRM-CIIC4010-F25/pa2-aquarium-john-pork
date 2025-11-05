@@ -49,9 +49,9 @@ void ofApp::setup(){
     player->setBounds(ofGetWindowWidth() - 20, ofGetWindowHeight() - 20);
 
 
-    myAquarium->addAquariumLevel(std::make_shared<Level_0>(0, 10));
-    myAquarium->addAquariumLevel(std::make_shared<Level_1>(1, 15));
-    myAquarium->addAquariumLevel(std::make_shared<Level_2>(2, 20));
+    myAquarium->addAquariumLevel(std::make_shared<Level_0>(0, 25));
+    myAquarium->addAquariumLevel(std::make_shared<Level_1>(1, 50));
+    myAquarium->addAquariumLevel(std::make_shared<Level_2>(2, 200));
     myAquarium->Repopulate(); // initial population
 
     // now that we are mostly set, lets pass the player and the aquarium downstream
