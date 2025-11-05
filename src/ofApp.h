@@ -23,6 +23,7 @@ struct Particle {
     ofVec2f vel;
     float alpha;
     float size;
+    ofColor color; // Color of the particle
 };
 
 class ofApp : public ofBaseApp{

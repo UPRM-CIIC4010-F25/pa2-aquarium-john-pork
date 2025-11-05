@@ -111,6 +111,24 @@ void ofApp::update() {
     if(gameManager->GetActiveSceneName() == GameSceneKindToString(GameSceneKind::AQUARIUM_GAME)){
         auto gameScene = std::static_pointer_cast<AquariumGameScene>(gameManager->GetActiveScene());
         auto player = gameScene->GetPlayer();
+        auto aquarium = gameScene->GetAquarium();
+        
+        // Check for FastFish eating and spawn red particles
+        std::vector<ofVec2f> fastFishEatPositions = aquarium->GetAndClearFastFishEatPositions();
+        for(const auto& pos : fastFishEatPositions){
+            // Spawn red particle burst
+            for(int i = 0; i < 8; i++){
+                Particle p;
+                p.pos = pos;
+                float angle = ofRandom(TWO_PI);
+                float speed = ofRandom(2, 5);
+                p.vel.set(cos(angle) * speed, sin(angle) * speed);
+                p.alpha = 255;
+                p.size = ofRandom(3, 8);
+                p.color = ofColor(255, 50, 50); // Red particles for FastFish
+                particles.push_back(p);
+            }
+        }
 
         float deltaTime = 1.0f / 60.0f; 
         
@@ -143,6 +161,7 @@ void ofApp::update() {
                 p.vel.set(cos(angle) * speed, sin(angle) * speed);
                 p.alpha = 255;
                 p.size = ofRandom(3, 8);
+                p.color = ofColor(255, 255, 150); // Yellow particles for player
                 particles.push_back(p);
             }
             
@@ -263,7 +282,7 @@ if(gameManager->GetActiveSceneName() == GameSceneKindToString(GameSceneKind::AQU
     
     // Draw particles
     for(const auto& particle : particles){
-        ofSetColor(255, 255, 150, particle.alpha);
+        ofSetColor(particle.color.r, particle.color.g, particle.color.b, particle.alpha);
         ofDrawCircle(particle.pos.x, particle.pos.y, particle.size);
     }
     
