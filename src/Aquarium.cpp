@@ -144,11 +144,25 @@ ColorfulFish::ColorfulFish(float x, float y, int speed, std::shared_ptr<GameSpri
 : NPCreature(x, y, speed, sprite) {
     m_creatureType = AquariumCreatureType::ColorfulFish;
     m_value = 3; // Worth 3 points
-    setCollisionRadius(35); // Standard collision radius
+    setCollisionRadius(70); // Larger to match 140x140 sprite size
+    // Randomize wobble so fish don't sync
+    m_wobblePhase = ofRandom(0, TWO_PI);
+    m_wobbleSpeed = ofRandom(0.6f, 1.4f);
+    m_wobbleAngleAmp = ofRandom(0.08f, 0.16f); // ~5-9 degrees
 }
 
 void ColorfulFish::move() {
-    // Same movement as NPCreature - simple random direction
+    // Smooth curvy movement: gently bend direction over time
+    float t = ofGetElapsedTimef();
+    float bend = sinf(t * m_wobbleSpeed + m_wobblePhase) * m_wobbleAngleAmp; // radians
+    // rotate current direction by small bend
+    float c = cosf(bend);
+    float s = sinf(bend);
+    float ndx = m_dx * c - m_dy * s;
+    float ndy = m_dx * s + m_dy * c;
+    m_dx = ndx; m_dy = ndy;
+    normalize();
+
     m_x += m_dx * m_speed;
     m_y += m_dy * m_speed;
     if(m_dx < 0 ){
@@ -179,9 +193,24 @@ FastFish::FastFish(float x, float y, int speed, std::shared_ptr<GameSprite> spri
 }
 
 void FastFish::move() {
-    // Moves like BiggerFish - slower, more deliberate
-    m_x += m_dx * (m_speed * 0.5); // Moves at half speed
-    m_y += m_dy * (m_speed * 0.5);
+    // If we have a target, steer smoothly towards it
+    if (m_hasTarget) {
+        float vx = m_targetX - m_x;
+        float vy = m_targetY - m_y;
+        float len = sqrtf(vx * vx + vy * vy);
+        if (len > 0.0001f) {
+            vx /= len; vy /= len;
+            const float steer = 0.12f; // turning responsiveness
+            m_dx = (1.0f - steer) * m_dx + steer * vx;
+            m_dy = (1.0f - steer) * m_dy + steer * vy;
+            normalize();
+        }
+    }
+
+    // Move a bit faster than before
+    const float homingSpeedFactor = 0.95f; // slightly faster; still under player speed
+    m_x += m_dx * (m_speed * homingSpeedFactor);
+    m_y += m_dy * (m_speed * homingSpeedFactor);
     if(m_dx < 0 ){
         this->m_sprite->setFlipped(true);
     }else {
@@ -203,7 +232,7 @@ void FastFish::draw() const {
 AquariumSpriteManager::AquariumSpriteManager(){
     this->m_npc_fish = std::make_shared<GameSprite>("base-fish.png", 70,70);
     this->m_big_fish = std::make_shared<GameSprite>("bigger-fish.png", 120, 120);
-    this->m_colorful_fish = std::make_shared<GameSprite>("sprites/colorfulFish.png", 70, 70);
+    this->m_colorful_fish = std::make_shared<GameSprite>("sprites/colorfulFish.png", 140, 140);
     this->m_fast_fish = std::make_shared<GameSprite>("sprites/fastFish.png", 60, 60);
 }
 
@@ -243,6 +272,31 @@ void Aquarium::addAquariumLevel(std::shared_ptr<AquariumLevel> level){
 
 void Aquarium::update() {
     for (auto& creature : m_creatures) {
+        // If this is a FastFish, choose the nearest target (other fish or the player if available)
+        if (auto npc = std::dynamic_pointer_cast<NPCreature>(creature)) {
+            if (npc->GetType() == AquariumCreatureType::FastFish) {
+                if (auto ff = std::dynamic_pointer_cast<FastFish>(creature)) {
+                    ofVec2f bestPos = m_hasPlayerTarget ? m_playerTarget : ofVec2f(ff->getX(), ff->getY());
+                    float bestDist2 = m_hasPlayerTarget ? (m_playerTarget.x - ff->getX()) * (m_playerTarget.x - ff->getX()) +
+                                                          (m_playerTarget.y - ff->getY()) * (m_playerTarget.y - ff->getY())
+                                                       : std::numeric_limits<float>::max();
+                    // consider all other creatures as potential prey
+                    for (auto& other : m_creatures) {
+                        if (other == creature) continue;
+                        auto otherNpc = std::dynamic_pointer_cast<NPCreature>(other);
+                        if (!otherNpc) continue;
+                        float dx = other->getX() - ff->getX();
+                        float dy = other->getY() - ff->getY();
+                        float d2 = dx * dx + dy * dy;
+                        if (d2 < bestDist2) {
+                            bestDist2 = d2;
+                            bestPos.set(other->getX(), other->getY());
+                        }
+                    }
+                    ff->setTarget(bestPos.x, bestPos.y);
+                }
+            }
+        }
         creature->move();
     }
     
@@ -283,10 +337,16 @@ void Aquarium::HandleFastFishEating() {
         }
     }
     
-    // Remove eaten fish (visual only, doesn't affect level population)
+    // Remove eaten fish and decrement level population without adding to score
     for (auto& fish : toRemove) {
         auto it = std::find(m_creatures.begin(), m_creatures.end(), fish);
         if (it != m_creatures.end()) {
+            // Update level population counts so Repopulate can spawn replacements
+            auto preyNpc = std::dynamic_pointer_cast<NPCreature>(fish);
+            if (preyNpc && !m_aquariumlevels.empty()) {
+                int idx = this->currentLevel % this->m_aquariumlevels.size();
+                this->m_aquariumlevels.at(idx)->ConsumePopulation(preyNpc->GetType(), 0 /*no score*/);
+            }
             m_creatures.erase(it);
         }
     }
@@ -443,6 +503,8 @@ void AquariumGameScene::Update(){
                 ofLogError() << "Error: creatureB is null in collision event." << std::endl;
             }
         }
+        // Update player position so FastFish can also target the player
+        this->m_aquarium->SetPlayerTarget(this->m_player->getX(), this->m_player->getY());
         this->m_aquarium->update();
     }
 

@@ -101,13 +101,24 @@ public:
     ColorfulFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite);
     void move() override;
     void draw() const override;
+private:
+    // Parameters for non-straight curvy movement
+    float m_wobblePhase = 0.0f;
+    float m_wobbleSpeed = 1.0f;
+    float m_wobbleAngleAmp = 0.12f; // radians to bend direction (~7 deg)
 };
 
 class FastFish : public NPCreature {
 public:
     FastFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite);
+    // Allow steering towards a target point (prey or player)
+    void setTarget(float tx, float ty) { m_targetX = tx; m_targetY = ty; m_hasTarget = true; }
     void move() override;
     void draw() const override;
+private:
+    float m_targetX = 0.0f;
+    float m_targetY = 0.0f;
+    bool m_hasTarget = false;
 };
 
 
@@ -139,6 +150,8 @@ public:
     void SpawnCreature(AquariumCreatureType type);
     void HandleFastFishEating();
     std::vector<ofVec2f> GetAndClearFastFishEatPositions();
+    // Provide player position so FastFish can consider it as a target
+    void SetPlayerTarget(float x, float y) { m_playerTarget.set(x, y); m_hasPlayerTarget = true; }
     
     std::shared_ptr<Creature> getCreatureAt(int index);
     int getCreatureCount() const { return m_creatures.size(); }
@@ -156,6 +169,9 @@ private:
     std::vector<ofVec2f> m_fastFishEatPositions; // Store positions where FastFish ate other fish
     std::vector<std::shared_ptr<AquariumLevel>> m_aquariumlevels;
     std::shared_ptr<AquariumSpriteManager> m_sprite_manager;
+    // Cached player target for homing behavior
+    ofVec2f m_playerTarget{0.0f, 0.0f};
+    bool m_hasPlayerTarget = false;
 };
 
 
